@@ -18,3 +18,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({error}, {status: 500});
   }
 }
+
+export async function POST(req: NextRequest) {
+  const {id, username, email} = await req.json();
+
+  if (!id || !username || !email) NextResponse.json({"error": "Missing required data"}, {status: 400});
+  
+  try {
+    const newRow = await sql`INSERT INTO users (id, username, email) VALUES (${id}, ${username}, ${email})`
+    return NextResponse.json({"message": "User successfully added"}, {status: 200});
+  }
+  catch (error) {
+    return NextResponse.json({error}, {status: 500});
+  }
+}

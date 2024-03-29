@@ -9,7 +9,7 @@ interface Props {
 
 export async function GET(req: NextRequest, {params: {id}}: Props) {
     try {
-      const users = await sql`SELECT * FROM users WHERE id=${id}`; 
+      const users = await sql`SELECT id, email, username FROM users WHERE id=${id}`; 
       return NextResponse.json(users.rows, {status: 200});
     }
     catch (error) {

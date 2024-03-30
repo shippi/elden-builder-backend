@@ -4,4 +4,10 @@ CREATE TABLE users (
 	username VARCHAR(255) UNIQUE NOT NULL
 )
 
-SELECT * FROM users
+CREATE TABLE builds (
+    id SERIAL PRIMARY KEY,
+    uid VARCHAR(255) NOT NULL REFERENCES users,
+    name VARCHAR(64) NOT NULL,
+    build JSON NOT NULL,
+    public BOOLEAN NOT NULL
+)

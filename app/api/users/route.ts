@@ -8,8 +8,8 @@ export async function GET(req: NextRequest) {
   try {
     let users;
 
-    if (email) users = await sql`SELECT * FROM users WHERE email=${email}`;
-    else if (username) users = await sql`SELECT * FROM users WHERE username=${username}`;
+    if (email) users = await sql`SELECT * FROM users WHERE UPPER(email)=UPPER(${email})`;
+    else if (username) users = await sql`SELECT * FROM users WHERE UPPER(username=${username})`;
     else users = await sql`SELECT * FROM users`;
 
     return NextResponse.json(users.rows, {status: 200});

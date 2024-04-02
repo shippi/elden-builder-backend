@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
             rows = await sql`SELECT * FROM builds WHERE uid=${uid}`
         }
         else {
-            rows = await sql`SELECT * FROM builds `
+            rows = await sql`SELECT * FROM builds`
         }
         return NextResponse.json(rows.rows, {status: 200})
     }

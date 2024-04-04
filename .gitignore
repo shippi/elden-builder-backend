@@ -27,6 +27,8 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+.next
+
 # Vercel
 .vercel
 
@@ -35,3 +37,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+#firebase credentials
+firebase_config.json

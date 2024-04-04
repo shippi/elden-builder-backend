@@ -10,12 +10,13 @@ export async function GET(req: NextRequest) {
     let users;
 
     if (email) users = await sql`SELECT * FROM users WHERE UPPER(email)=UPPER(${email})`;
-    else if (username) users = await sql`SELECT * FROM users WHERE UPPER(username=${username})`;
+    else if (username) users = await sql`SELECT * FROM users WHERE UPPER(username)=UPPER(${username})`;
     else users = await sql`SELECT * FROM users`;
 
     return NextResponse.json(users.rows, {status: 200});
   }
   catch (error) {
+    console.log(error)
     return NextResponse.json({error}, {status: 500});
   }
 }
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({"message": "User successfully added"}, {status: 200});
   }
   catch (error) {
+
     return NextResponse.json({error}, {status: 500});
   }
 }

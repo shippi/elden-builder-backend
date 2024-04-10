@@ -25,3 +25,16 @@ export async function PUT(req: NextRequest, {params: {id}}: Props) {
         return NextResponse.json({error}, {status: 500});
     }
 }
+
+export async function DELETE(req: NextRequest, {params: {id}}: Props) {
+  try {
+    if (!id) NextResponse.json({"error": "Missing id"}, {status: 400});
+    
+    await sql`DELETE FROM builds WHERE id=${id}`
+
+    return NextResponse.json({"message": "Delete successful"}, {status: 200});
+}
+catch (error) {
+    return NextResponse.json({error}, {status: 500});
+}
+}

@@ -5,19 +5,20 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const uid = req.nextUrl.searchParams.get("uid");
     const name = req.nextUrl.searchParams.get("name");
+    const authToken = req.headers.get("Authorization");
 
     try {
-        let rows
-        if (uid && name) {
-            rows = await sql`SELECT * FROM builds WHERE uid=${uid} AND UPPER(name)=UPPER(${name})`
+        if (!authToken) {
+            if (uid && name) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid} AND UPPER(name)=UPPER(${name}) AND is_public=TRUE`).rows, {status: 200})
+            if (uid) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid} AND is_public=TRUE`).rows, {status: 200})
         }
-        else if (uid) {
-            rows = await sql`SELECT * FROM builds WHERE uid=${uid}`
-        }
-        else {
-            rows = await sql`SELECT * FROM builds WHERE`
-        }
-        return NextResponse.json(rows.rows, {status: 200})
+
+        if (authToken && uid && !await handleAuthToken(authToken, uid)) NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
+
+        if (authToken && uid && name) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid} AND UPPER(name)=UPPER(${name})`).rows, {status: 200});
+        if (authToken && uid) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid}`).rows, {status: 200});
+
+        return NextResponse.json(await (await sql`SELECT * FROM builds WHERE is_public=TRUE`).rows, {status: 200});
     }
     catch (error) {
         return NextResponse.json({error}, {status: 500});

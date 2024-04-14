@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
             rows = await sql`SELECT * FROM builds WHERE uid=${uid}`
         }
         else {
-            rows = await sql`SELECT * FROM builds`
+            rows = await sql`SELECT * FROM builds WHERE`
         }
         return NextResponse.json(rows.rows, {status: 200})
     }
@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
     try {
         if (authToken && await handleAuthToken(authToken, uid)) {
             const newRow = await sql`INSERT INTO builds (uid, name, build, is_public) VALUES (${uid}, ${name}, ${build}, ${isPublic}) RETURNING id`
-            return NextResponse.json({"message": "Build successfult added", "id": newRow.rows[0].id}, {status: 200});
+            return NextResponse.json({"message": "Build successfuly added", "id": newRow.rows[0].id}, {status: 200});
         }
-        return NextResponse.json({"error": "Access Token is invalid."}, {status: 500});
+        return NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
     }
     
     catch (error) {

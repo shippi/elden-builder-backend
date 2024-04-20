@@ -39,4 +39,4 @@ yarn-error.log*
 *.tsbuildinfo
 
 #firebase credentials
-*/firebase_config.json
+*/firebase-config.json

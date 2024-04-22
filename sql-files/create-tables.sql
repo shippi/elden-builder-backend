@@ -8,6 +8,7 @@ CREATE TABLE builds (
     id SERIAL PRIMARY KEY,
     uid VARCHAR(255) NOT NULL REFERENCES users,
     name VARCHAR(64) NOT NULL,
+    description TEXT,
     build JSON NOT NULL,
     public BOOLEAN NOT NULL
 )

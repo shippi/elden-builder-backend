@@ -1,11 +1,12 @@
 import app from "@/lib/firebase";
 import { sql } from "@vercel/postgres";
 import { NextRequest, NextResponse } from "next/server";
+import { neon } from '@neondatabase/serverless';
 
 export async function GET(req: NextRequest) {
   const email = req.nextUrl.searchParams.get("email");
   const username = req.nextUrl.searchParams.get("username");
-
+  
   try {
     let users;
 
@@ -19,6 +20,7 @@ export async function GET(req: NextRequest) {
     console.log(error)
     return NextResponse.json({error}, {status: 500});
   }
+  
 }
 
 export async function POST(req: NextRequest) {

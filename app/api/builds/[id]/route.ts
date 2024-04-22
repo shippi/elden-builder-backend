@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, {params: {id}}: Props) {
 }
 
 export async function PUT(req: NextRequest, {params: {id}}: Props) {
-    const {name, build, isPublic} = await req.json();
+    const {name, description, build, isPublic} = await req.json();
 
     try {
       const authToken = req.headers.get("Authorization");
@@ -40,6 +40,7 @@ export async function PUT(req: NextRequest, {params: {id}}: Props) {
       if (authToken && await handleAuthToken(authToken, uid)) {
         await sql`UPDATE builds SET 
                     name=COALESCE(${name}, name),
+                    description=COALESCE(${description}, name),
                     build=COALESCE(${build}, build),
                     is_public=COALESCE(${isPublic}, is_public)
                   WHERE id=${id}`

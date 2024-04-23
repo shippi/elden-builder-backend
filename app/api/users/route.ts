@@ -1,7 +1,6 @@
 import app from "@/lib/firebase";
 import { sql } from "@vercel/postgres";
 import { NextRequest, NextResponse } from "next/server";
-import { neon } from '@neondatabase/serverless';
 
 export async function GET(req: NextRequest) {
   const email = req.nextUrl.searchParams.get("email");
@@ -17,7 +16,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(users.rows, {status: 200});
   }
   catch (error) {
-    console.log(error)
     return NextResponse.json({error}, {status: 500});
   }
   

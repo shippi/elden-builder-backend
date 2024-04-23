@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, {params: {id}}: Props) {
     return NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
   }
   catch (error) {
-
+    return NextResponse.json({error}, {status: 500});
   }
 }
 

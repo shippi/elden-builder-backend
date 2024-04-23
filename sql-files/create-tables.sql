@@ -12,3 +12,9 @@ CREATE TABLE builds (
     build JSON NOT NULL,
     public BOOLEAN NOT NULL
 )
+
+CREATE TABLE views (
+    build_id INTEGER NOT NULL REFERENCES builds,
+    user_id VARCHAR(255) REFERENCES users,
+    created_at TIMESTAMP NOT NULL
+)

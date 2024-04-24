@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     try {
         if (authToken && await handleAuthToken(authToken, uid)) {
-            const newRow = await sql`INSERT INTO builds (uid, name, description, build, is_public) VALUES (${uid}, ${name}, ${description}, ${build}, ${isPublic}) RETURNING id`
+            const newRow = await sql`INSERT INTO builds (uid, name, description, build, is_public, updated_at) VALUES (${uid}, ${name}, ${description}, ${build}, ${isPublic}, current_timestamp) RETURNING id`
             return NextResponse.json({"message": "Build successfuly added", "id": newRow.rows[0].id}, {status: 200});
         }
         return NextResponse.json({"error": "Access Token is invalid."}, {status: 403});

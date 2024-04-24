@@ -42,7 +42,8 @@ export async function PUT(req: NextRequest, {params: {id}}: Props) {
                     name=COALESCE(${name}, name),
                     description=COALESCE(${description}, name),
                     build=COALESCE(${build}, build),
-                    is_public=COALESCE(${isPublic}, is_public)
+                    is_public=COALESCE(${isPublic}, is_public),
+                    updated_at=current_timestamp
                   WHERE id=${id}`
         return NextResponse.json({"message": "Update/Save successful"}, {status: 200});
       }

@@ -2,7 +2,7 @@ CREATE TABLE users (
 	id VARCHAR(255) PRIMARY KEY,
 	email VARCHAR(255) UNIQUE NOT NULL,
 	username VARCHAR(255) UNIQUE NOT NULL
-)
+);
 
 CREATE TABLE builds (
     id SERIAL PRIMARY KEY,
@@ -10,11 +10,12 @@ CREATE TABLE builds (
     name VARCHAR(64) NOT NULL,
     description TEXT,
     build JSON NOT NULL,
-    public BOOLEAN NOT NULL
-)
+    is_public BOOLEAN NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
 
 CREATE TABLE views (
     build_id INTEGER NOT NULL REFERENCES builds,
     user_id VARCHAR(255) REFERENCES users,
     created_at TIMESTAMP NOT NULL
-)
+);

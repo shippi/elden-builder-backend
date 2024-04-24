@@ -1,8 +1,10 @@
 import { sql } from "@vercel/postgres";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
 
+
+    return NextResponse.json({"Message": "Succ"}, {status: 200});
 }
 
 export async function POST(req: NextRequest) {

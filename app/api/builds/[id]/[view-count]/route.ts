@@ -8,9 +8,13 @@ interface Props {
 }
 
 export async function GET(req: NextRequest, {params: {id}}: Props) {
-    
-
-    return NextResponse.json({"Message": id}, {status: 200});
+    try {
+        const count = await sql`SELECT COUNT(build_id) FROM views WHERE build_id=${id}`
+        return NextResponse.json(count.rows[0], {status: 200});
+    }
+    catch (error) {
+        return NextResponse.json({"error": error}, {status: 500});
+    }
 }
 
 export async function POST(req: NextRequest, {params: {id}}: Props) {

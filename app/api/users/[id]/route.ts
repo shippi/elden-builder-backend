@@ -15,4 +15,4 @@ export async function GET(req: NextRequest, {params: {id}}: Props) {
     catch (error) {
       return NextResponse.json({error}, {status: 500});
     }
-  }
+}

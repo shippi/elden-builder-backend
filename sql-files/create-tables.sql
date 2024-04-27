@@ -19,3 +19,10 @@ CREATE TABLE views (
     user_id VARCHAR(255) REFERENCES users,
     created_at TIMESTAMP NOT NULL
 );
+
+CREATE TABLE likes (
+    build_id INTEGER REFERENCES builds,
+    user_id VARCHAR(255) REFERENCES users,
+    created_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (build_id, user_id)
+);

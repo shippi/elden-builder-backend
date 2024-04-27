@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
         if (authToken && uid && !await handleAuthToken(authToken, uid)) NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
         if (authToken && uid) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid} ORDER BY id ASC`).rows, {status: 200});
 
-        return NextResponse.json(await (await sql`SELECT * FROM builds WHERE is_public=TRUE ORDER BY id ASC, updated_at DESC LIMIT ${limit} OFFSET ${startIndex}`).rows, {status: 200});
+        return NextResponse.json(await (await sql`SELECT * FROM builds WHERE is_public=TRUE ORDER BY updated_at DESC, id ASC LIMIT ${limit} OFFSET ${startIndex}`).rows, {status: 200});
     }
     catch (error) {
         return NextResponse.json({error}, {status: 500});

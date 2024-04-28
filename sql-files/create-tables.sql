@@ -26,3 +26,8 @@ CREATE TABLE likes (
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (build_id, user_id)
 );
+
+SELECT build_id, COUNT(build_id) FROM views
+WHERE created_at >= current_timestamp - INTERVAL '7 days'
+GROUP BY build_id
+ORDER BY count DESC

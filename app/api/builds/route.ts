@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
                 totalCount: totalRecords, 
                 builds: await (await sql
                     `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
-                    JOIN views ON builds.id = views.build_id
+                    FULL JOIN views ON builds.id = views.build_id
                     WHERE builds.is_public=TRUE 
                     GROUP BY id
                     ORDER by count DESC
@@ -43,15 +43,19 @@ export async function GET(req: NextRequest) {
                 {status: 200});
         }
 
+        const builds = await sql 
+        `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
+        FULL JOIN views ON builds.id = views.build_id
+        WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
+        GROUP BY id
+        ORDER by count DESC 
+        LIMIT ${limit} OFFSET ${startIndex}`
+
+        console.log()
+
         return NextResponse.json({
-            totalCount: totalRecords, 
-            builds: await (await sql
-                `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
-                JOIN views ON builds.id = views.build_id
-                WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
-                GROUP BY id
-                ORDER by count DESC 
-                LIMIT ${limit} OFFSET ${startIndex}`).rows
+            totalCount: builds.rowCount, 
+            builds: builds.rows.slice(startIndex, startIndex + limit)
             }, 
             {status: 200});
     }

@@ -16,32 +16,44 @@ export async function GET(req: NextRequest) {
         if (authToken && uid && !await handleAuthToken(authToken, uid)) NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
         if (authToken && uid) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid} ORDER BY id ASC`).rows, {status: 200});
 
+        const totalRecords = Number(await (await sql`SELECT COUNT(*) FROM builds`).rows[0].count);
+
         if (sort == "mostviewed") {
-            return NextResponse.json(await (await 
-                sql`SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
+            return NextResponse.json({
+                totalCount: totalRecords, 
+                builds: await (await sql
+                    `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
                     JOIN views ON builds.id = views.build_id
+                    WHERE buids.is_public=TRUE 
                     GROUP BY id
                     ORDER by count DESC
-                    LIMIT ${limit} OFFSET ${startIndex}`)
-                    .rows, {status: 200});
+                    LIMIT ${limit} OFFSET ${startIndex}`).rows
+                }, 
+                {status: 200});
         }
         
         if (sort == "latest") {
-            return NextResponse.json(await (await 
-                sql`SELECT * FROM builds WHERE is_public=TRUE 
+            return NextResponse.json({ 
+                totalCount: totalRecords, 
+                builds: await (await sql
+                    `SELECT * FROM builds WHERE is_public=TRUE 
                     ORDER BY updated_at DESC, id ASC 
-                    LIMIT ${limit} OFFSET ${startIndex}`)
-                    .rows, {status: 200});
+                    LIMIT ${limit} OFFSET ${startIndex}`).rows
+                }, 
+                {status: 200});
         }
 
-        return NextResponse.json(await (await 
-            sql`SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
+        return NextResponse.json({
+            totalCount: totalRecords, 
+            builds: await (await sql
+                `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
                 JOIN views ON builds.id = views.build_id
                 WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
                 GROUP BY id
                 ORDER by count DESC 
-                LIMIT ${limit} OFFSET ${startIndex}`)
-                .rows, {status: 200});
+                LIMIT ${limit} OFFSET ${startIndex}`).rows
+            }, 
+            {status: 200});
     }
     catch (error) {
         return NextResponse.json({error}, {status: 500});

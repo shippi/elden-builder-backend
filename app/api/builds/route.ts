@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const uid = req.nextUrl.searchParams.get("uid");
     const name = req.nextUrl.searchParams.get("name");
+    const sort = req.nextUrl.searchParams.get("sort")?.toLowerCase();
     const authToken = req.headers.get("Authorization");
 
     const {startIndex, limit} = getPaginationValues(req);
@@ -15,7 +16,21 @@ export async function GET(req: NextRequest) {
         if (authToken && uid && !await handleAuthToken(authToken, uid)) NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
         if (authToken && uid) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid} ORDER BY id ASC`).rows, {status: 200});
 
-        return NextResponse.json(await (await sql`SELECT * FROM builds WHERE is_public=TRUE ORDER BY updated_at DESC, id ASC LIMIT ${limit} OFFSET ${startIndex}`).rows, {status: 200});
+        if (sort == "mostviewed") {
+            return NextResponse.json(await (await 
+                sql`SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
+                    JOIN views ON builds.id = views.build_id
+                    GROUP BY id
+                    ORDER by count DESC
+                    LIMIT ${limit} OFFSET ${startIndex}`)
+                    .rows, {status: 200});
+        }
+        
+        return NextResponse.json(await (await 
+            sql`SELECT * FROM builds WHERE is_public=TRUE 
+                ORDER BY updated_at DESC, id ASC 
+                LIMIT ${limit} OFFSET ${startIndex}`)
+                .rows, {status: 200});
     }
     catch (error) {
         return NextResponse.json({error}, {status: 500});

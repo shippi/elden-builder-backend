@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
                 builds: await (await sql
                     `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
                     JOIN views ON builds.id = views.build_id
-                    WHERE buids.is_public=TRUE 
+                    WHERE builds.is_public=TRUE 
                     GROUP BY id
                     ORDER by count DESC
                     LIMIT ${limit} OFFSET ${startIndex}`).rows

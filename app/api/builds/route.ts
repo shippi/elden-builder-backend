@@ -55,18 +55,28 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        const builds = await sql 
-        `SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as liked FROM builds
+        const totalCount = Number(await(await sql`
+        SELECT COUNT(*) FROM (SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT)as likes FROM builds
         LEFT JOIN users ON builds.uid = users.id
         FULL JOIN views ON builds.id = views.build_id
         FULL JOIN likes ON builds.id = likes.build_id
         WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
         GROUP BY builds.id, users.id
-        ORDER by views DESC`
+        ORDER by views DESC)`)[0].count)
+
+        const builds = await sql 
+        `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT)::int as likes FROM builds
+        LEFT JOIN users ON builds.uid = users.id
+        FULL JOIN views ON builds.id = views.build_id
+        FULL JOIN likes ON builds.id = likes.build_id
+        WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
+        GROUP BY builds.id, users.id
+        ORDER by views DESC
+        LIMIT ${limit} OFFSET ${startIndex}`
 
         return NextResponse.json({
-            totalCount: builds.length, 
-            builds: builds.slice(startIndex, startIndex + limit)
+            totalCount, 
+            builds: builds
             }, 
             {status: 200}
         );

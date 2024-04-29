@@ -1,6 +1,8 @@
 import app from "@/lib/firebase";
-import { sql } from "@vercel/postgres";
+import { neon } from "@neondatabase/serverless";
 import { NextRequest, NextResponse } from "next/server";
+
+const sql = neon(process.env.DATABASE_URL || "");
 
 export async function GET(req: NextRequest) {
   const email = req.nextUrl.searchParams.get("email");
@@ -13,7 +15,7 @@ export async function GET(req: NextRequest) {
     else if (username) users = await sql`SELECT * FROM users WHERE UPPER(username)=UPPER(${username})`;
     else users = await sql`SELECT * FROM users`;
 
-    return NextResponse.json(users.rows, {status: 200});
+    return NextResponse.json(users, {status: 200});
   }
   catch (error) {
     return NextResponse.json({error}, {status: 500});
@@ -37,7 +39,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({"message": "User successfully added"}, {status: 200});
   }
   catch (error) {
-
     return NextResponse.json({error}, {status: 500});
   }
 }

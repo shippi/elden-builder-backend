@@ -1,5 +1,7 @@
-import { sql } from "@vercel/postgres";
 import { NextRequest, NextResponse } from "next/server";
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL || "");
 
 interface Props {
     params: {
@@ -9,8 +11,8 @@ interface Props {
 
 export async function GET(req: NextRequest, {params: {id}}: Props) {
     try {
-        const count = await sql`SELECT COUNT(build_id) FROM views WHERE build_id=${id}`
-        return NextResponse.json(count.rows[0], {status: 200});
+        const count = await(await sql`SELECT COUNT(build_id) FROM views WHERE build_id=${id}`)[0];
+        return NextResponse.json(count, {status: 200});
     }
     catch (error) {
         return NextResponse.json({"error": error}, {status: 500});

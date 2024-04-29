@@ -1,5 +1,5 @@
 import { handleAuthToken } from "@/utils";
-import { sql } from "@vercel/postgres";
+import { neon } from "@neondatabase/serverless";
 import { NextRequest, NextResponse } from "next/server";
 
 interface Props {
@@ -7,6 +7,8 @@ interface Props {
     id: string
   }
 }
+
+const sql = neon(process.env.DATABASE_URL || "");
 
 export async function POST(req: NextRequest, {params: {id}}: Props) {
     const { build_id } = await req.json();

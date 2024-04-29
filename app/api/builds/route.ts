@@ -22,11 +22,13 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({
                 totalCount: totalRecords, 
                 builds: await (await sql
-                    `SELECT builds.*, COUNT(build_id) FROM builds
+                    `SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as liked FROM builds
+                    LEFT JOIN users ON builds.uid = users.id
                     FULL JOIN views ON builds.id = views.build_id
-                    WHERE builds.is_public=TRUE 
-                    GROUP BY id
-                    ORDER by count DESC
+                    FULL JOIN likes ON builds.id = likes.build_id
+                    WHERE builds.is_public=TRUE
+                    GROUP BY builds.id, users.id
+                    ORDER by views DESC
                     LIMIT ${limit} OFFSET ${startIndex}`).rows
                 }, 
                 {status: 200});
@@ -36,22 +38,27 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ 
                 totalCount: totalRecords, 
                 builds: await (await sql
-                    `SELECT * FROM builds WHERE is_public=TRUE 
-                    ORDER BY updated_at DESC, id ASC 
+                    `SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as liked FROM builds
+                    LEFT JOIN users ON builds.uid = users.id
+                    FULL JOIN views ON builds.id = views.build_id
+                    FULL JOIN likes ON builds.id = likes.build_id
+                    WHERE builds.is_public=TRUE
+                    GROUP BY builds.id, users.id
+                    ORDER by updated_at DESC, id ASC 
                     LIMIT ${limit} OFFSET ${startIndex}`).rows
                 }, 
                 {status: 200});
         }
 
         const builds = await sql 
-        `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
+        `SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as liked FROM builds
+        LEFT JOIN users ON builds.uid = users.id
         FULL JOIN views ON builds.id = views.build_id
+        FULL JOIN likes ON builds.id = likes.build_id
         WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
-        GROUP BY id
-        ORDER by count DESC 
+        GROUP BY builds.id, users.id
+        ORDER by views DESC
         LIMIT ${limit} OFFSET ${startIndex}`
-
-        console.log()
 
         return NextResponse.json({
             totalCount: builds.rowCount, 

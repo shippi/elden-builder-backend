@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({
                 totalCount: totalRecords, 
                 builds: await (await sql
-                    `SELECT id, uid, name, description, build, is_public, updated_at, COUNT(build_id) FROM builds
+                    `SELECT builds.*, COUNT(build_id) FROM builds
                     FULL JOIN views ON builds.id = views.build_id
                     WHERE builds.is_public=TRUE 
                     GROUP BY id

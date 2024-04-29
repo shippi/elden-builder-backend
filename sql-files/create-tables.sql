@@ -27,7 +27,9 @@ CREATE TABLE likes (
     PRIMARY KEY (build_id, user_id)
 );
 
-SELECT build_id, COUNT(build_id) FROM views
-WHERE created_at >= current_timestamp - INTERVAL '7 days'
-GROUP BY build_id
-ORDER BY count DESC
+SELECT builds.*, COUNT(views.build_id), CAST(COUNT(DISTINCT likes.build_id) AS BIT) as liked FROM builds
+                    FULL JOIN views ON builds.id = views.build_id
+                    FULL JOIN likes ON likes.build_id = builds.id 
+                    WHERE builds.is_public=TRUE AND builds.id = likes.build_id AND likes.user_id = '3U4RgAJVybNrSeWgKCOsfqz8Ng43'
+                    GROUP BY id
+                    ORDER by count DESC

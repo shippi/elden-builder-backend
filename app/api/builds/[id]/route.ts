@@ -14,10 +14,20 @@ export async function GET(req: NextRequest, {params: {id}}: Props) {
   try {
     if (!id) return NextResponse.json({"error": "Missing id"}, {status: 400});
 
-    const row = await sql`SELECT * FROM builds WHERE id=${id}`
+    const authToken = req.headers.get("Authorization") || "";
+    const decodedUid = await handleAuthToken(authToken);
+
+    const row = await sql`
+    SELECT builds.*, users.username, COALESCE(view_count.count, 0) as views, COUNT(DISTINCT likes.user_id)::int as likes, 
+    CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked, 
+    CAST(COUNT(DISTINCT(CASE bookmarks.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as bookmarked FROM builds
+                        LEFT JOIN users ON builds.uid = users.id
+                        FULL JOIN likes ON builds.id = likes.build_id
+                        FULL JOIN bookmarks ON builds.id = bookmarks.build_id
+                        WHERE builds.id = ${id}
+                        GROUP BY builds.id, users.id, views`
+
     if (row.length < 1) return NextResponse.json({"error": "Build does not exist."}, {status: 404});
-    
-    const authToken = req.headers.get("Authorization");
 
     if ((!row[0].is_public && authToken && await handleAuthToken(authToken, row[0].uid)) || row[0].is_public) 
       return NextResponse.json(row[0], {status: 200});

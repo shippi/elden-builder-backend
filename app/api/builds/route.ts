@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
                                         FULL JOIN bookmarks ON builds.id = bookmarks.build_id
                                         WHERE builds.is_public=TRUE AND LOWER(builds.name) LIKE LOWER(${"%" + search + "%"})
                                         GROUP BY builds.id, users.id, views
-                                        ORDER by views DESC
+                                        ORDER by builds.updated_at DESC
                     LIMIT ${limit} OFFSET ${startIndex}`)
                 }, 
                 {status: 200}

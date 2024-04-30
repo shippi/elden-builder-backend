@@ -5,10 +5,11 @@ import { NextRequest, NextResponse } from "next/server";
 const sql = neon(process.env.DATABASE_URL || "");
 
 export async function GET(req: NextRequest) {
-    
     const uid = req.nextUrl.searchParams.get("uid");
     const name = req.nextUrl.searchParams.get("name");
     const sort = req.nextUrl.searchParams.get("sort")?.toLowerCase();
+    const search = decodeURI(req.nextUrl.searchParams.get("search")?.toLowerCase() || "");
+    
     const authToken = req.headers.get("Authorization") || "";
 
     const {startIndex, limit} = getPaginationValues(req);
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
         if (authToken && uid && !await handleAuthToken(authToken, uid)) NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
         if (authToken && uid) return  NextResponse.json(await (await sql`SELECT * FROM builds WHERE uid=${uid} ORDER BY id ASC`), {status: 200});
 
-        const totalRecords = Number(await (await sql`SELECT COUNT(*) FROM builds`)[0].count);
+        const totalRecords = Number(await (await sql`SELECT COUNT(*) FROM builds WHERE builds.is_public=TRUE AND LOWER(builds.name) LIKE LOWER(${"%" + search + "%"})`)[0].count);
 
         const decodedUid = await handleAuthToken(authToken);
 
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
                                         FULL JOIN views ON builds.id = views.build_id
                                         FULL JOIN likes ON builds.id = likes.build_id
                                         FULL JOIN bookmarks ON builds.id = bookmarks.build_id
-                                        WHERE builds.is_public=TRUE
+                                        WHERE builds.is_public=TRUE AND LOWER(builds.name) LIKE LOWER(${"%" + search + "%"})
                                         GROUP BY builds.id, users.id
                                         ORDER by views DESC
                     LIMIT ${limit} OFFSET ${startIndex}`)
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest) {
                                         FULL JOIN views ON builds.id = views.build_id
                                         FULL JOIN likes ON builds.id = likes.build_id
                                         FULL JOIN bookmarks ON builds.id = bookmarks.build_id
-                                        WHERE builds.is_public=TRUE
+                                        WHERE builds.is_public=TRUE AND LOWER(builds.name) LIKE LOWER(${"%" + search + "%"})
                                         GROUP BY builds.id, users.id
                                         ORDER by views DESC
                     LIMIT ${limit} OFFSET ${startIndex}`)
@@ -62,15 +63,6 @@ export async function GET(req: NextRequest) {
                 {status: 200}
             );
         }
-
-        const totalCount = Number(await(await sql`
-        SELECT COUNT(*) FROM (SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as likes FROM builds
-        LEFT JOIN users ON builds.uid = users.id
-        FULL JOIN views ON builds.id = views.build_id
-        FULL JOIN likes ON builds.id = likes.build_id
-        WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
-        GROUP BY builds.id, users.id
-        ORDER by views DESC)`)[0].count)
         
         const builds = await sql 
         `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, 
@@ -80,13 +72,13 @@ export async function GET(req: NextRequest) {
                             FULL JOIN views ON builds.id = views.build_id
                             FULL JOIN likes ON builds.id = likes.build_id
                             FULL JOIN bookmarks ON builds.id = bookmarks.build_id
-                            WHERE builds.is_public=TRUE
+                            WHERE builds.is_public=TRUE AND LOWER(builds.name) LIKE LOWER(${"%" + search + "%"})
                             GROUP BY builds.id, users.id
                             ORDER by views DESC
         LIMIT ${limit} OFFSET ${startIndex}`
 
         return NextResponse.json({
-            totalCount, 
+            totalCount: totalRecords, 
             builds: builds
             }, 
             {status: 200}

@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const uid = req.nextUrl.searchParams.get("uid");
     const name = req.nextUrl.searchParams.get("name");
     const sort = req.nextUrl.searchParams.get("sort")?.toLowerCase();
-    const authToken = req.headers.get("Authorization");
+    const authToken = req.headers.get("Authorization") || "";
 
     const {startIndex, limit} = getPaginationValues(req);
 
@@ -21,11 +21,13 @@ export async function GET(req: NextRequest) {
 
         const totalRecords = Number(await (await sql`SELECT COUNT(*) FROM builds`)[0].count);
 
+        const decodedUid = await handleAuthToken(authToken);
+
         if (sort == "mostviewed") {
             return NextResponse.json({
                 totalCount: totalRecords,  
                 builds: await (await sql
-                    `SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as liked FROM builds
+                    `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked FROM builds
                     LEFT JOIN users ON builds.uid = users.id
                     FULL JOIN views ON builds.id = views.build_id
                     FULL JOIN likes ON builds.id = likes.build_id
@@ -42,7 +44,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ 
                 totalCount: totalRecords, 
                 builds: await (await sql
-                    `SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as liked FROM builds
+                    `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked FROM builds
                     LEFT JOIN users ON builds.uid = users.id
                     FULL JOIN views ON builds.id = views.build_id
                     FULL JOIN likes ON builds.id = likes.build_id
@@ -56,20 +58,20 @@ export async function GET(req: NextRequest) {
         }
 
         const totalCount = Number(await(await sql`
-        SELECT COUNT(*) FROM (SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT)as likes FROM builds
+        SELECT COUNT(*) FROM (SELECT builds.*, users.username, COUNT(views.build_id) as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT) as likes FROM builds
         LEFT JOIN users ON builds.uid = users.id
         FULL JOIN views ON builds.id = views.build_id
         FULL JOIN likes ON builds.id = likes.build_id
         WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
         GROUP BY builds.id, users.id
         ORDER by views DESC)`)[0].count)
-
+        
         const builds = await sql 
-        `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, CAST(COUNT(DISTINCT likes.build_id) AS BIT)::int as likes FROM builds
+        `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked FROM builds
         LEFT JOIN users ON builds.uid = users.id
         FULL JOIN views ON builds.id = views.build_id
         FULL JOIN likes ON builds.id = likes.build_id
-        WHERE views.created_at >= current_timestamp - INTERVAL '7 days' AND builds.is_public is TRUE
+        WHERE builds.is_public=TRUE
         GROUP BY builds.id, users.id
         ORDER by views DESC
         LIMIT ${limit} OFFSET ${startIndex}`

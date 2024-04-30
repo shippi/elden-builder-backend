@@ -27,13 +27,16 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({
                 totalCount: totalRecords,  
                 builds: await (await sql
-                    `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked FROM builds
-                    LEFT JOIN users ON builds.uid = users.id
-                    FULL JOIN views ON builds.id = views.build_id
-                    FULL JOIN likes ON builds.id = likes.build_id
-                    WHERE builds.is_public=TRUE
-                    GROUP BY builds.id, users.id
-                    ORDER by views DESC
+                    `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, 
+                    CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked, 
+                    CAST(COUNT(DISTINCT(CASE bookmarks.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as bookmarked FROM builds
+                                        LEFT JOIN users ON builds.uid = users.id
+                                        FULL JOIN views ON builds.id = views.build_id
+                                        FULL JOIN likes ON builds.id = likes.build_id
+                                        FULL JOIN bookmarks ON builds.id = bookmarks.build_id
+                                        WHERE builds.is_public=TRUE
+                                        GROUP BY builds.id, users.id
+                                        ORDER by views DESC
                     LIMIT ${limit} OFFSET ${startIndex}`)
                 }, 
                 {status: 200}
@@ -44,13 +47,16 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ 
                 totalCount: totalRecords, 
                 builds: await (await sql
-                    `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked FROM builds
-                    LEFT JOIN users ON builds.uid = users.id
-                    FULL JOIN views ON builds.id = views.build_id
-                    FULL JOIN likes ON builds.id = likes.build_id
-                    WHERE builds.is_public=TRUE
-                    GROUP BY builds.id, users.id
-                    ORDER by updated_at DESC, id ASC 
+                    `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, 
+                    CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked, 
+                    CAST(COUNT(DISTINCT(CASE bookmarks.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as bookmarked FROM builds
+                                        LEFT JOIN users ON builds.uid = users.id
+                                        FULL JOIN views ON builds.id = views.build_id
+                                        FULL JOIN likes ON builds.id = likes.build_id
+                                        FULL JOIN bookmarks ON builds.id = bookmarks.build_id
+                                        WHERE builds.is_public=TRUE
+                                        GROUP BY builds.id, users.id
+                                        ORDER by views DESC
                     LIMIT ${limit} OFFSET ${startIndex}`)
                 }, 
                 {status: 200}
@@ -67,13 +73,16 @@ export async function GET(req: NextRequest) {
         ORDER by views DESC)`)[0].count)
         
         const builds = await sql 
-        `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked FROM builds
-        LEFT JOIN users ON builds.uid = users.id
-        FULL JOIN views ON builds.id = views.build_id
-        FULL JOIN likes ON builds.id = likes.build_id
-        WHERE builds.is_public=TRUE
-        GROUP BY builds.id, users.id
-        ORDER by views DESC
+        `SELECT builds.*, users.username, COUNT(views.build_id)::int as views, COUNT(DISTINCT likes.user_id)::int as likes, 
+        CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as liked, 
+        CAST(COUNT(DISTINCT(CASE bookmarks.user_id WHEN ${decodedUid} THEN 1 ELSE null END)) AS bit)::int as bookmarked FROM builds
+                            LEFT JOIN users ON builds.uid = users.id
+                            FULL JOIN views ON builds.id = views.build_id
+                            FULL JOIN likes ON builds.id = likes.build_id
+                            FULL JOIN bookmarks ON builds.id = bookmarks.build_id
+                            WHERE builds.is_public=TRUE
+                            GROUP BY builds.id, users.id
+                            ORDER by views DESC
         LIMIT ${limit} OFFSET ${startIndex}`
 
         return NextResponse.json({

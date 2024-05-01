@@ -1,4 +1,4 @@
-import { handleAuthToken } from "@/utils";
+import { getPaginationValues, handleAuthToken } from "@/utils";
 import { neon } from "@neondatabase/serverless";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -9,6 +9,47 @@ interface Props {
 }
 
 const sql = neon(process.env.DATABASE_URL || "");
+
+export async function GET(req: NextRequest, {params: {id}}: Props) {
+	const search = decodeURI(req.nextUrl.searchParams.get("search")?.toLowerCase() || "");
+    const authToken = req.headers.get("Authorization") || "";
+    const {startIndex, limit} = getPaginationValues(req);
+
+	try {
+		if (!id || !authToken) return NextResponse.json({"error": "Missing id"}, {status: 400});
+		
+		if (authToken && await handleAuthToken(authToken, id)){
+			const totalRecords = Number(await (await sql`
+				SELECT COUNT(*) FROM builds 
+				JOIN likes ON builds.id = likes.build_id
+				WHERE builds.is_public=TRUE AND LOWER(builds.name) LIKE LOWER(${"%" + search + "%"}) AND likes.user_id = ${id}`)[0].count);
+			return NextResponse.json({
+                totalCount: totalRecords,  
+                builds: await (await sql
+                    `SELECT builds.*, users.username, liked_at.created_at as liked_at, COALESCE(view_count.count, 0) as views, COALESCE(like_count.count, 0) as likes,
+                    CAST(COUNT(DISTINCT(CASE likes.user_id WHEN ${id} THEN 1 ELSE null END)) AS bit)::int as liked, 
+                    CAST(COUNT(DISTINCT(CASE bookmarks.user_id WHEN ${id} THEN 1 ELSE null END)) AS bit)::int as bookmarked FROM builds
+                                        LEFT JOIN users ON builds.uid = users.id
+                                        FULL JOIN likes ON builds.id = likes.build_id
+                                        FULL JOIN bookmarks ON builds.id = bookmarks.build_id
+                                        FULL JOIN (SELECT build_id, COUNT(build_id) FROM views GROUP by build_id) view_count ON builds.id = view_count.build_id
+                                        FULL JOIN (SELECT likes.build_id, likes.created_at FROM likes WHERE likes.user_id = ${id}) liked_at ON builds.id = liked_at.build_id
+                                        FULL JOIN (SELECT build_id, COUNT(build_id) FROM likes GROUP by build_id) like_count ON builds.id = like_count.build_id
+                                        WHERE builds.is_public=TRUE AND likes.user_id = ${id} AND LOWER(builds.name) LIKE LOWER(${"%" + search + "%"})
+                                        GROUP BY builds.id, users.id, views, liked_at, likes
+                                        ORDER BY liked_at DESC
+                    LIMIT ${limit} OFFSET ${startIndex}`)
+                }, 
+                {status: 200}
+			)
+      	}
+
+		return NextResponse.json({"error": "Access Token is invalid."}, {status: 403});
+	}
+	catch (error) {
+		return NextResponse.json({error}, {status: 500});
+	}
+}
 
 export async function POST(req: NextRequest, {params: {id}}: Props) {
     const { build_id } = await req.json();

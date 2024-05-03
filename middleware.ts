@@ -33,7 +33,7 @@ export function middleware(request: NextRequest) {
   Object.entries(corsOptions).forEach(([key, value]) => {
     response.headers.set(key, value)
   })
- 
+  
   return response
 }
  

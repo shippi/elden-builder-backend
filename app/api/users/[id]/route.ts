@@ -11,6 +11,7 @@ interface Props {
 const sql = neon(process.env.DATABASE_URL || "");
 
 export async function GET(req: NextRequest, {params: {id}}: Props) {
+    if (!id) return NextResponse.json({"error": "Missing id"}, {status: 400});
     try {
       const users = await sql`SELECT id, email, username FROM users WHERE id=${id}`; 
       return NextResponse.json(users, {status: 200});

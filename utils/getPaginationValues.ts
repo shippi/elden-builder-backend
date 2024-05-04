@@ -5,8 +5,6 @@ export function getPaginationValues(req: NextRequest) {
     
     const limit = !Number(req.nextUrl.searchParams.get("limit")) ? 10 : Number(req.nextUrl.searchParams.get("limit")) > 50 ? 50 : Number(req.nextUrl.searchParams.get("limit"));
 
-
-    console.log(limit)
     const startIndex = (page - 1) * limit;
 
     return {startIndex, limit}

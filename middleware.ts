@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
  
-const allowedOrigins = ['https://elden-builder-frontend.vercel.app', 'https://www.elden-builder.com/']
+const allowedOrigins = ['https://elden-builder-frontend.vercel.app', 'https://www.elden-builder.com']
  
 const corsOptions = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
